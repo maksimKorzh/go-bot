@@ -150,7 +150,7 @@ def start_engine():
     move = ''
     move = locate_stone(color)
     if move == '' or move == old_move: continue
-    print('Recognized user move:', move)
+    print('play ' + color[0].upper() + ' ' + move)
     
     # update board with user move and make engine move
     try:
