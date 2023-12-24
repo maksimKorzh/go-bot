@@ -9,7 +9,7 @@
 #
 #####################################
 
-# packages
+# Packages
 import sys
 import cv2
 import numpy as np
@@ -17,34 +17,34 @@ import pyautogui as pg
 import time
 import pexpect
 
-# constants (modify according to your screenshot parameters)
-CELL_SIZE = 26
-BOARD_TOP_COORD = 109
-BOARD_LEFT_COORD = 247
+# Constants (modify according to your screenshot parameters)
+CELL_SIZE = 28
+BOARD_TOP_COORD = 325 - CELL_SIZE * 2
+BOARD_LEFT_COORD = 45 - CELL_SIZE * 2
 
 # Go playing program
 ENGINE = 'gnugo --mode gtp'
 BOARD_SIZE = 19
 KOMI = 6.5
 
-# players
+# Players
 WHITE = 0
 BLACK = 1
 
-# side to move
-side_to_move = 0
+# Side to move
+side_to_move = BLACK
 
-# read argv if available
+# Read ARGV if available
 try:
   side_to_move = BLACK if sys.argv[1] == 'black' else WHITE
 except:
-  print('usage: "chessbot.py white" or "chessbot.py black"')
+  print('usage: "playok-go.py white" or "playok-go.py black"')
   sys.exit(0)
 
-# coordinates of vertices
+# Coordinates of vertices
 set_square = {}
 
-# array to convert board square indices to coordinates
+# Array to convert board square indices to coordinates
 get_square = [
   'A19', 'B19', 'C19', 'D19', 'E19', 'F19', 'G19', 'H19', 'J19', 'K19', 'L19', 'M19', 'N19', 'O19', 'P19', 'Q19', 'R19', 'S19', 'T19',
   'A18', 'B18', 'C18', 'D18', 'E18', 'F18', 'G18', 'H18', 'J18', 'K18', 'L18', 'M18', 'N18', 'O18', 'P18', 'Q18', 'R18', 'S18', 'T18',
@@ -67,53 +67,55 @@ get_square = [
    'A1',  'B1',  'C1',  'D1',  'E1',  'F1',  'G1', 'H1',  'J1',  'K1',  'L1',  'M1',  'N1',  'O1',  'P1',  'Q1',  'R1',  'S1',  'T1',
 ];
 
-# init square to coordinates array
+# Init square to coordinates array
 def init_coords():
-  # board top left corner coords
+  # Board top left corner coords
   x = BOARD_LEFT_COORD + CELL_SIZE
   y = BOARD_TOP_COORD + CELL_SIZE
 
-  # loop over board rows
+  # Loop over board rows
   for col in range(BOARD_SIZE):
-    # loop over board columns
+    # Loop over board columns
     for row in range(BOARD_SIZE):
-      # init vertice
+      # Init vertice
       square = row * BOARD_SIZE + col
       
-      # associate square with square center coordinates
+      # Associate square with square center coordinates
       set_square.update({'ABCDEFGHJKLMNOPQRST'[row]+str(BOARD_SIZE-col): (int(x+CELL_SIZE/2), int(y+CELL_SIZE/2))})
 
-      # increment x coord by cell size
+      # Increment x coord by cell size
       x += CELL_SIZE + 1
     
-    # restore x coord, increment y coordinate by cell size
+    # Restore x coord, increment y coordinate by cell size
     x = BOARD_LEFT_COORD + CELL_SIZE
     y += CELL_SIZE + 1
 
-# convert screen to board coordinates
+# Convert screen to board coordinates
 def locate_stone(color):
-  # take a screenshot to locate objects on
-  screenshot = pg.screenshot()
+  # Take a screenshot to locate objects on
+  screenshot = pg.screenshot('scr.png')
 
-  # adjust colors
+  # Adjust colors
   screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
 
-  # locate stone on a screenshot
+  # Locate stone on a screenshot
   try:
     stone = pg.locateOnScreen(color + '.png', confidence=0.9)
     col = int((stone.left - BOARD_LEFT_COORD) / CELL_SIZE) - 1
     row = int((stone.top - BOARD_TOP_COORD) / CELL_SIZE) - 1
-    return get_square[row*19+col]
+    move = get_square[row*19+col]
+    return move
 
-  except:
-    return ''
+  # Failed locate a stone
+  except: return ''
 
-# init Go engine
-def start_engine():
-  # start engine subprocess
+# Engine plays game
+def play_game():
+  global side_to_move
+  # Start engine subprocess
   c = pexpect.spawnu(ENGINE)
   
-  # init commands
+  # Init commands
   init_commands = [
     'name',
     'version',
@@ -124,13 +126,13 @@ def start_engine():
     'clear_board'
   ]
   
-  # init engine
+  # Init engine
   for command in init_commands:
     c.sendline(command)
     c.expect('= (.*)', timeout = -1)
     print(c.after.strip())
 
-  # make first move is side is BLACK
+  # Make first move is side is BLACK
   if side_to_move == BLACK:
     c.sendline('genmove B')
     c.expect('= (.*)', timeout = -1)
@@ -138,21 +140,20 @@ def start_engine():
     pg.moveTo(set_square[first_move])
     pg.click()
   
-  # old move
+  # Old move
   old_move = ''
   
-  # play game
+  # Play game
   while True:
-    # pick up opponent's color
+    # Pick up opponent's color
     color = 'white' if side_to_move == BLACK else 'black'
 
-    # wait for opponent's move
+    # Wait for opponent's move
     move = ''
     move = locate_stone(color)
     if move == '' or move == old_move: continue
-    print('play ' + color[0].upper() + ' ' + move)
     
-    # update board with user move and make engine move
+    # Update board with user move and make engine move
     try:
       c.sendline('play ' + color[0].upper() + ' ' + move)
       c.expect('= (.*)', timeout = -1)
@@ -164,11 +165,43 @@ def start_engine():
       best_move = c.after.split()[-1]
       pg.moveTo(set_square[best_move])
       pg.click()
+    
+    # Error updating board
+    except Exception as e: print('Error updating board:', e)
 
-    except: pass
+# Watch game (debug)
+def watch_game():
+  global side_to_move
+  old_move = ''
 
-# main driver  
-init_coords()
-start_engine()
+  # Init engine
+  c = pexpect.spawnu(ENGINE)
 
+  while True:
+    # Parse move
+    color = 'black' if side_to_move else 'white'
+    move = locate_stone(color)
 
+    # Follow move
+    if move != '' and move != old_move:
+      old_move = move
+      print(color.capitalize() + ' moved to ' + move)
+
+      # Sync engine
+      c.sendline('play ' + color[0].upper() + ' ' + move)
+      c.expect('= (.*)', timeout = -1)
+      c.sendline('showboard')
+      c.expect('= (.*)', timeout = -1)
+      print(c.after.split('=')[-1].replace('stones', '').replace('has', ''))
+
+      # Move cursor to last move
+      pg.moveTo(set_square[move])
+
+      # Change side
+      side_to_move ^= 1
+
+# Main driver
+if __name__ == '__main__':
+  init_coords()
+  watch_game()
+  #play_game()
