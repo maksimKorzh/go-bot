@@ -18,14 +18,15 @@ import time
 import pexpect
 
 # Constants (modify according to your screenshot parameters)
-CELL_SIZE = 28
-BOARD_TOP_COORD = 325 - CELL_SIZE * 2
-BOARD_LEFT_COORD = 45 - CELL_SIZE * 2
+CELL_SIZE = 28                           # distance between vertices
+MATCH_SIZE = int((CELL_SIZE - 12) / 2)   # size of "black.png" in px
+BOARD_TOP_COORD = 325 - CELL_SIZE * 2    # distance from top screen edge to board top line in px
+BOARD_LEFT_COORD = 45 - CELL_SIZE * 2    # distance from left screen edge to board left line in px
 
 # Go playing program
 ENGINE = 'gnugo --mode gtp'
 BOARD_SIZE = 19
-KOMI = 6.5
+KOMI = 5.5
 
 # Players
 WHITE = 0
@@ -33,13 +34,6 @@ BLACK = 1
 
 # Side to move
 side_to_move = BLACK
-
-# Read ARGV if available
-try:
-  side_to_move = BLACK if sys.argv[1] == 'black' else WHITE
-except:
-  print('usage: "playok-go.py white" or "playok-go.py black"')
-  sys.exit(0)
 
 # Coordinates of vertices
 set_square = {}
@@ -56,15 +50,15 @@ get_square = [
   'A12', 'B12', 'C12', 'D12', 'E12', 'F12', 'G12', 'H12', 'J12', 'K12', 'L12', 'M12', 'N12', 'O12', 'P12', 'Q12', 'R12', 'S12', 'T12',
   'A11', 'B11', 'C11', 'D11', 'E11', 'F11', 'G11', 'H11', 'J11', 'K11', 'L11', 'M11', 'N11', 'O11', 'P11', 'Q11', 'R11', 'S11', 'T11',
   'A10', 'B10', 'C10', 'D10', 'E10', 'F10', 'G10', 'H10', 'J10', 'K10', 'L10', 'M10', 'N10', 'O10', 'P10', 'Q10', 'R10', 'S10', 'T10',
-   'A9',  'B9',  'C9',  'D9',  'E9',  'F9',  'G9', 'H9',  'J9',  'K9',  'L9',  'M9',  'N9',  'O9',  'P9',  'Q9',  'R9',  'S9',  'T9',
-   'A8',  'B8',  'C8',  'D8',  'E8',  'F8',  'G8', 'H8',  'J8',  'K8',  'L8',  'M8',  'N8',  'O8',  'P8',  'Q8',  'R8',  'S8',  'T8',
-   'A7',  'B7',  'C7',  'D7',  'E7',  'F7',  'G7', 'H7',  'J7',  'K7',  'L7',  'M7',  'N7',  'O7',  'P7',  'Q7',  'R7',  'S7',  'T7',
-   'A6',  'B6',  'C6',  'D6',  'E6',  'F6',  'G6', 'H6',  'J6',  'K6',  'L6',  'M6',  'N6',  'O6',  'P6',  'Q6',  'R6',  'S6',  'T6',
-   'A5',  'B5',  'C5',  'D5',  'E5',  'F5',  'G5', 'H5',  'J5',  'K5',  'L5',  'M5',  'N5',  'O5',  'P5',  'Q5',  'R5',  'S5',  'T5',
-   'A4',  'B4',  'C4',  'D4',  'E4',  'F4',  'G4', 'H4',  'J4',  'K4',  'L4',  'M4',  'N4',  'O4',  'P4',  'Q4',  'R4',  'S4',  'T4',
-   'A3',  'B3',  'C3',  'D3',  'E3',  'F3',  'G3', 'H3',  'J3',  'K3',  'L3',  'M3',  'N3',  'O3',  'P3',  'Q3',  'R3',  'S3',  'T3',
-   'A2',  'B2',  'C2',  'D2',  'E2',  'F2',  'G2', 'H2',  'J2',  'K2',  'L2',  'M2',  'N2',  'O2',  'P2',  'Q2',  'R2',  'S2',  'T2',
-   'A1',  'B1',  'C1',  'D1',  'E1',  'F1',  'G1', 'H1',  'J1',  'K1',  'L1',  'M1',  'N1',  'O1',  'P1',  'Q1',  'R1',  'S1',  'T1',
+  'A9',  'B9',  'C9',  'D9',  'E9',  'F9',  'G9',  'H9',  'J9',  'K9',  'L9',  'M9',  'N9',  'O9',  'P9',  'Q9',  'R9',  'S9',  'T9',
+  'A8',  'B8',  'C8',  'D8',  'E8',  'F8',  'G8',  'H8',  'J8',  'K8',  'L8',  'M8',  'N8',  'O8',  'P8',  'Q8',  'R8',  'S8',  'T8',
+  'A7',  'B7',  'C7',  'D7',  'E7',  'F7',  'G7',  'H7',  'J7',  'K7',  'L7',  'M7',  'N7',  'O7',  'P7',  'Q7',  'R7',  'S7',  'T7',
+  'A6',  'B6',  'C6',  'D6',  'E6',  'F6',  'G6',  'H6',  'J6',  'K6',  'L6',  'M6',  'N6',  'O6',  'P6',  'Q6',  'R6',  'S6',  'T6',
+  'A5',  'B5',  'C5',  'D5',  'E5',  'F5',  'G5',  'H5',  'J5',  'K5',  'L5',  'M5',  'N5',  'O5',  'P5',  'Q5',  'R5',  'S5',  'T5',
+  'A4',  'B4',  'C4',  'D4',  'E4',  'F4',  'G4',  'H4',  'J4',  'K4',  'L4',  'M4',  'N4',  'O4',  'P4',  'Q4',  'R4',  'S4',  'T4',
+  'A3',  'B3',  'C3',  'D3',  'E3',  'F3',  'G3',  'H3',  'J3',  'K3',  'L3',  'M3',  'N3',  'O3',  'P3',  'Q3',  'R3',  'S3',  'T3',
+  'A2',  'B2',  'C2',  'D2',  'E2',  'F2',  'G2',  'H2',  'J2',  'K2',  'L2',  'M2',  'N2',  'O2',  'P2',  'Q2',  'R2',  'S2',  'T2',
+  'A1',  'B1',  'C1',  'D1',  'E1',  'F1',  'G1',  'H1',  'J1',  'K1',  'L1',  'M1',  'N1',  'O1',  'P1',  'Q1',  'R1',  'S1',  'T1',
 ];
 
 # Init square to coordinates array
@@ -101,17 +95,16 @@ def locate_stone(color):
   # Locate stone on a screenshot
   try:
     stone = pg.locateOnScreen(color + '.png', confidence=0.9)
-    col = int((stone.left - BOARD_LEFT_COORD) / CELL_SIZE) - 1
-    row = int((stone.top - BOARD_TOP_COORD) / CELL_SIZE) - 1
+    col = int((stone.left - MATCH_SIZE - BOARD_LEFT_COORD) / CELL_SIZE) - 1
+    row = int((stone.top - MATCH_SIZE - BOARD_TOP_COORD) / CELL_SIZE) - 1
     move = get_square[row*19+col]
     return move
 
   # Failed locate a stone
   except: return ''
 
-# Engine plays game
-def play_game():
-  global side_to_move
+# Init engine
+def init_engine(ENGINE):
   # Start engine subprocess
   c = pexpect.spawnu(ENGINE)
   
@@ -120,7 +113,6 @@ def play_game():
     'name',
     'version',
     'protocol_version',
-    'list_commands',
     'komi ' + str(KOMI),
     'boardsize ' + str(BOARD_SIZE),
     'clear_board'
@@ -130,7 +122,30 @@ def play_game():
   for command in init_commands:
     c.sendline(command)
     c.expect('= (.*)', timeout = -1)
-    print(c.after.strip())
+    print(command + '\n' + c.after.strip())
+
+  # Engine subprocess
+  return c
+
+# Print board
+def print_board(c):
+  # Print board
+  c.sendline('showboard')
+  c.expect('= (.*)', timeout = -1)
+  time.sleep(0.4)
+  print(c.after.split('=')[-1].replace('stones', '').replace('has', ''))
+
+  # Estimate score
+  c.sendline('estimate_score')
+  c.expect('= (.*)', timeout = -1)
+  time.sleep(0.4)
+  print(c.after.split('=')[-1])
+
+# Engine plays game
+def play_game():
+  global side_to_move
+  # Start engine subprocess
+  c = init_engine(ENGINE)
 
   # Make first move is side is BLACK
   if side_to_move == BLACK:
@@ -155,27 +170,40 @@ def play_game():
     
     # Update board with user move and make engine move
     try:
+      # Sync engine
       c.sendline('play ' + color[0].upper() + ' ' + move)
       c.expect('= (.*)', timeout = -1)
-      print(c.after)
       old_move = move
+      time.sleep(0.4)
+      print(' Parsed move:', move)
+      print_board(c)
+
+      # Generate move
       c.sendline('genmove ' + ('B' if side_to_move == BLACK else 'W'))
       c.expect('= (.*)', timeout = -1)
-      print(c.after)
+      time.sleep(0.4)
       best_move = c.after.split()[-1]
+      time.sleep(0.4)
+      print(' Generated move:', best_move)
+      print_board(c)
+
+      # Make engine move
       pg.moveTo(set_square[best_move])
       pg.click()
     
     # Error updating board
-    except Exception as e: print('Error updating board:', e)
+    except Exception as e:
+      if best_move == 'PASS': print('Click PASS move')
+      else: print('Game finished!')
+      sys.exit(0)
 
-# Watch game (debug)
-def watch_game():
+# Calibrate screen coordinates (debug)
+def calibrate():
   global side_to_move
   old_move = ''
 
   # Init engine
-  c = pexpect.spawnu(ENGINE)
+  c = init_engine(ENGINE)
 
   while True:
     # Parse move
@@ -190,10 +218,7 @@ def watch_game():
       # Sync engine
       c.sendline('play ' + color[0].upper() + ' ' + move)
       c.expect('= (.*)', timeout = -1)
-      c.sendline('showboard')
-      c.expect('= (.*)', timeout = -1)
-      print(c.after.split('=')[-1].replace('stones', '').replace('has', ''))
-
+      
       # Move cursor to last move
       pg.moveTo(set_square[move])
 
@@ -202,6 +227,17 @@ def watch_game():
 
 # Main driver
 if __name__ == '__main__':
+  print(MATCH_SIZE)
   init_coords()
-  watch_game()
-  #play_game()
+  try:
+    side_to_move = BLACK if sys.argv[1] == 'black' else WHITE
+    play_game()
+  except:
+    print('usage: "playok-go.py white" or "playok-go.py black"\n')
+    print('Now running in calibration mode...\n')
+    print('Mouse pointer should follow the last move made on board')
+    print('If it doesn\'t alter BOARD_TOP_COORD/BOARD_LEFT_COORD')
+    print('and CELL_SIZE/MATCH_SIZE accordingly.')
+    print('You will also need to provide your own "black.png" and')
+    print('"white.png" if your resolution is other than 1920x1080.\n')
+    calibrate()
