@@ -227,11 +227,10 @@ def calibrate():
 # Main driver
 if __name__ == '__main__':
   init_coords()
-  try:
+  if len(sys.argv) == 2:
     side_to_move = BLACK if sys.argv[1] == 'black' else WHITE
     play_game()
-    sys.exit(0)
-  except:
+  else:
     print('usage: "playok-go.py white" or "playok-go.py black"\n')
     print(' Now running in calibration mode...\n')
     print('1. Open web browser on half of the screen on the left')
