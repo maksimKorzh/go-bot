@@ -9,7 +9,7 @@ comes up with a move which is then converted to screen coordinates
 where the mouse pointer is going to be placed and the click event
 would get triggered.
 
-# How to use it
+# How to use it?
 First you need to have python and deps installed to make it run,
 then you should calibrate the script parameters to match your
 actual screen size/board placement, finally you can assign the
@@ -22,5 +22,5 @@ PLAY:<br>
 <strong>python3 playok-go.py white</strong><br>
 <strong>python3 playok-go.py black</strong><br>
 
-# See it in action
+# See it in action!
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/5jhJwHxAY_w/0.jpg)](https://www.youtube.com/watch?v=5jhJwHxAY_w)
