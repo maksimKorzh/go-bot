@@ -18,13 +18,13 @@ import time
 import pexpect
 
 # Constants (modify according to your screenshot parameters)
-CELL_SIZE = 28                           # distance between vertices
-MATCH_SIZE = int((CELL_SIZE - 12) / 2)   # size of "black.png" in px
-BOARD_TOP_COORD = 325 - CELL_SIZE * 2    # distance from top screen edge to board top line in px
-BOARD_LEFT_COORD = 45 - CELL_SIZE * 2    # distance from left screen edge to board left line in px
+CELL_SIZE = 28
+MATCH_SIZE = int((CELL_SIZE - 12) / 2)
+BOARD_TOP_COORD = 325 - CELL_SIZE * 2
+BOARD_LEFT_COORD = 45 - CELL_SIZE * 2
 
 # Go playing program
-ENGINE = 'gnugo --mode gtp'
+ENGINE = 'gnugo --mode gtp --never-resign'
 BOARD_SIZE = 19
 KOMI = 5.5
 
@@ -195,7 +195,6 @@ def play_game():
     except Exception as e:
       if best_move == 'PASS': print('Click PASS move')
       else: print('Game finished!')
-      sys.exit(0)
 
 # Calibrate screen coordinates (debug)
 def calibrate():
@@ -227,17 +226,23 @@ def calibrate():
 
 # Main driver
 if __name__ == '__main__':
-  print(MATCH_SIZE)
   init_coords()
   try:
     side_to_move = BLACK if sys.argv[1] == 'black' else WHITE
     play_game()
+    sys.exit(0)
   except:
     print('usage: "playok-go.py white" or "playok-go.py black"\n')
-    print('Now running in calibration mode...\n')
-    print('Mouse pointer should follow the last move made on board')
-    print('If it doesn\'t alter BOARD_TOP_COORD/BOARD_LEFT_COORD')
-    print('and CELL_SIZE/MATCH_SIZE accordingly.')
-    print('You will also need to provide your own "black.png" and')
-    print('"white.png" if your resolution is other than 1920x1080.\n')
+    print(' Now running in calibration mode...\n')
+    print('1. Open web browser on half of the screen on the left')
+    print('2. Open playok.com, choose any game played between players')
+    print('3. Maximize board size using "+"')
+    print('4. Mouse pointer should follow the last move made on board\n')
+    print(' If it doesn\'t work:\n')
+    print('1. Set BOARD_TOP_COORD = px from top screen edge to board top line')
+    print('2. Set BOARD_LEFT_COORD = px from left screen edge to board left line')
+    print('3. Set CELL_SIZE = distance between board cell vertices')
+    print('4. Optionally create custom "white.png" and "black.png" images')
+    print('5. Set MATCH_SIZE to your "black.png" width\n')
+    print(' Calibrate until the mouse pointer pefectly matches the stone.')
     calibrate()
