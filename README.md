@@ -15,10 +15,10 @@ then you should calibrate the script parameters to match your
 actual screen size/board placement, finally you can assign the
 side to play to the script and enjoy the game.<br><br>
 
-CALIBRATE:<br><br>
+CALIBRATE:<br>
 <strong>python3 playok-go.py</strong><br><br>
 
-PLAY:<br><br>
+PLAY:<br>
 <strong>python3 playok-go.py white</strong><br>
 <strong>python3 playok-go.py black</strong><br>
 
