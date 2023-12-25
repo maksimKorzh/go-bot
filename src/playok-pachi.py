@@ -24,7 +24,7 @@ BOARD_TOP_COORD = 325 - CELL_SIZE * 2
 BOARD_LEFT_COORD = 45 - CELL_SIZE * 2
 
 # Go playing program
-ENGINE = 'gnugo --mode gtp --never-resign'
+ENGINE = 'pachi'
 BOARD_SIZE = 19
 KOMI = 5.5
 
@@ -135,7 +135,7 @@ def print_board(c):
   print(c.after.split('=')[-1].replace('stones', '').replace('has', ''))
 
   # Estimate score
-  c.sendline('estimate_score')
+  c.sendline('score_est')
   c.expect('= (.*)', timeout = -1)
   print(c.after.split('=')[-1])
 
@@ -177,8 +177,8 @@ def play_game():
 
       # Generate move
       c.sendline('genmove ' + ('B' if side_to_move == BLACK else 'W'))
-      c.expect('= (.*)', timeout = -1)
-      best_move = c.after.split()[-1]
+      c.expect('\n= (.*)', timeout = -1)
+      best_move = c.after.split("=")[-1].strip()
       print(' Generated move:', best_move)
       print_board(c)
 
