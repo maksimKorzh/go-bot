@@ -4,7 +4,7 @@ Play Go at playok.com or online-go.com via GNU Go or Pachi
 # How it works?
 Python script takes a screenshot, finds the coordinates of
 the last move made on board and then sends it to the GTP engine
-(GnuGo is default) subprocess to sync the board, then the engine
+(GnuGo or Pachi) subprocess to sync the board, then the engine
 comes up with a move which is then converted to screen coordinates
 where the mouse pointer is going to be placed and the click event
 would get triggered.
