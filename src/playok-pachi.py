@@ -148,7 +148,7 @@ def play_game():
   # Make first move is side is BLACK
   if side_to_move == BLACK:
     c.sendline('genmove B')
-    c.expect('= (.*)', timeout = -1)
+    c.expect('\n= (.*)', timeout = -1)
     first_move = c.after.split()[-1]
     pg.moveTo(set_square[first_move])
     pg.click()
