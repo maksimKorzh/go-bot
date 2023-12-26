@@ -1,5 +1,5 @@
-# PlayOK Go Bot
-Play Go at playok.com via GNU Go (or any other GTP engine)
+# Go Bot
+Play Go at playok.com or online-go.com via GNU Go or Pachi
 
 # How it works?
 Python script takes a screenshot, finds the coordinates of
@@ -10,17 +10,19 @@ where the mouse pointer is going to be placed and the click event
 would get triggered.
 
 # How to use it?
-First you need to have python and deps installed to make it run,
-then you should calibrate the script parameters to match your
-actual screen size/board placement, finally you can assign the
-side to play to the script and enjoy the game.<br><br>
+First you need to have python, deps and GTP Go engines being
+installed on your system, next you have to calibrate the script
+parameters to match your actual screen size/board placement,
+finally you can assign the side to play to the script and enjoy
+the game.<br><br>
 
 CALIBRATE:<br>
-<strong>python3 playok-go.py</strong><br><br>
+<strong>python3 playok-gnugo.py</strong> or <strong>python3 playok-pachi.py</strong><br>
+<strong>python3 ogs-gnugo.py</strong> or <strong>python3 ogs-pachi.py</strong><br><br>
 
 PLAY:<br>
-<strong>python3 playok-go.py white</strong><br>
-<strong>python3 playok-go.py black</strong><br>
+<strong>python3 playok-gnugo.py white</strong> or <strong>python3 playok-gnugo.py black</strong><br>
+<strong>python3 ogs-pachi.py white</strong> or <strong>python3 ogs-pachi.py black</strong><br>
 
 # See it in action!
-[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/5jhJwHxAY_w/0.jpg)](https://www.youtube.com/watch?v=5jhJwHxAY_w)
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/5jhJwHxAY_w/0.jpg)](https://www.youtube.com/watch?v=5jhJwHxAY_w&list=PLmN0neTso3JzeA6ZcZ_yvgOr-cUPL5eXN)
