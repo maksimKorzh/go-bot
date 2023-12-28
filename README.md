@@ -22,7 +22,13 @@ CALIBRATE:<br>
 
 PLAY:<br>
 <strong>python3 playok-gnugo.py white</strong> or <strong>python3 playok-gnugo.py black</strong><br>
-<strong>python3 ogs-pachi.py white</strong> or <strong>python3 ogs-pachi.py black</strong><br>
+<strong>python3 ogs-pachi.py white</strong> or <strong>python3 ogs-pachi.py black</strong><br><br>
+
+COACH (suggests moves for both sides using Pachi):<br>
+<strong>python3 playok-coach.py</strong><br><br>
+
+ESTIMATOR (estimates score using Pachi):<br>
+<strong>python3 playok-estimator.py</strong><br><br>
 
 # See it in action!
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/5jhJwHxAY_w/0.jpg)](https://www.youtube.com/watch?v=5jhJwHxAY_w&list=PLmN0neTso3JzeA6ZcZ_yvgOr-cUPL5eXN)
