@@ -24,7 +24,7 @@ BOARD_TOP_COORD = 325 - CELL_SIZE * 2
 BOARD_LEFT_COORD = 45 - CELL_SIZE * 2
 
 # Go playing program
-ENGINE = 'pachi'
+ENGINE = 'pachi-coach'
 BOARD_SIZE = 19
 KOMI = 5.5
 
@@ -159,23 +159,23 @@ def estimate_game():
       # Sync engine
       c.sendline('play ' + color[0].upper() + ' ' + move)
       c.expect('= (.*)', timeout = -1)
-      print_board(c)
-      print(' ' + color.capitalize() + ' played' +  move)
 
       # Change side
       side_to_move ^= 1
 
       # Generate move
-      c.sendline('genmove ' + color[0].upper())
+      player = ' Black' if side_to_move else ' White'
+      c.sendline('genmove ' + player[1])
       c.expect('\n= (.*)', timeout = -1)
       best_move = c.after.split("=")[-1].strip()
       c.sendline('undo')
       c.expect('= (.*)', timeout = -1)
-      print((' Black' if side_to_move else ' White') + 'should play ' + best_move)
+      print_board(c)
+      print(' ' + color.capitalize() + ' played ' + move)
+      print(player + ' should play ' + best_move)
 
 # Main driver
 if __name__ == '__main__':
   init_coords()
   side_to_move = BLACK
   estimate_game()
-
