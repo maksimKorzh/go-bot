@@ -16,15 +16,20 @@ import numpy as np
 import pyautogui as pg
 import time
 import pexpect
+import random
+import os
 
 # Constants (modify according to your screenshot parameters)
-CELL_SIZE = 33
-MATCH_SIZE = int((CELL_SIZE - 22) / 2)
-BOARD_TOP_COORD = 165 - CELL_SIZE * 2
-BOARD_LEFT_COORD = 66 - CELL_SIZE * 2
+CELL_SIZE = 28
+MATCH_SIZE = int((CELL_SIZE - 12) / 2)
+BOARD_TOP_COORD = 325 - CELL_SIZE * 2
+BOARD_LEFT_COORD = 45 - CELL_SIZE * 2
+GAMES = '../db/Cho_Chikun/'
+COLOR = 'Black'
+SINCE = 2000
 
 # Go playing program
-ENGINE = 'gnugo --mode gtp --never-resign'
+ENGINE = 'pachi'
 BOARD_SIZE = 19
 KOMI = 5.5
 
@@ -34,6 +39,12 @@ BLACK = 1
 
 # Side to move
 side_to_move = BLACK
+
+# Game database
+database = []
+
+# Moves of the game
+position = ''
 
 # Coordinates of vertices
 set_square = {}
@@ -60,6 +71,33 @@ get_square = [
   'A2',  'B2',  'C2',  'D2',  'E2',  'F2',  'G2',  'H2',  'J2',  'K2',  'L2',  'M2',  'N2',  'O2',  'P2',  'Q2',  'R2',  'S2',  'T2',
   'A1',  'B1',  'C1',  'D1',  'E1',  'F1',  'G1',  'H1',  'J1',  'K1',  'L1',  'M1',  'N1',  'O1',  'P1',  'Q1',  'R1',  'S1',  'T1',
 ];
+
+# Build games database
+def init_db():
+  global side_to_move, COLOR
+  for filename in os.listdir(GAMES):
+    with open(GAMES + filename) as f:
+      game = f.read()
+      player = 'PB' if side_to_move == BLACK else 'PW'
+      color = game.split(player + '[')[1].split(']')[0]
+      if color == 'Cho Chikun':
+        try: result = game.split('RE[')[1].split(']')[0][0]
+        except: pass
+        if result == COLOR[0]:
+          moves = game.split('DT')[-1].split('\n\n')[-1][:-2].replace('\n', '')
+          database.append(moves)
+  print(len(database), 'Cho Chikun games loaded')
+
+# Query database
+def query_db(position):
+  responses = set()
+  for i in range(len(database)):
+    if len(position) and position in database[i]:
+      try:
+        next_move = database[i].split(position)[-1].split(';')[1]
+        if database[i][0:4] == position[0:4]: responses.add(next_move)
+      except: pass
+  return list(responses)
 
 # Init square to coordinates array
 def init_coords():
@@ -94,7 +132,7 @@ def locate_stone(color):
 
   # Locate stone on a screenshot
   try:
-    stone = pg.locateOnScreen('../img/ogs-' + color + '.png', confidence=0.9)
+    stone = pg.locateOnScreen('../img/playok-' + color + '.png', confidence=0.9)
     col = int((stone.left - MATCH_SIZE - BOARD_LEFT_COORD) / CELL_SIZE) - 1
     row = int((stone.top - MATCH_SIZE - BOARD_TOP_COORD) / CELL_SIZE) - 1
     move = get_square[row*19+col]
@@ -135,24 +173,35 @@ def print_board(c):
   print(c.after.split('=')[-1].replace('stones', '').replace('has', ''))
 
   # Estimate score
-  c.sendline('estimate_score')
+  c.sendline('score_est')
   c.expect('= (.*)', timeout = -1)
   print(c.after.split('=')[-1])
 
 # Engine plays game
 def play_game():
-  global side_to_move
+  global side_to_move, position
   # Start engine subprocess
   c = init_engine(ENGINE)
 
+  # Init opening database
+  init_db()
+
   # Make first move is side is BLACK
   if side_to_move == BLACK:
-    c.sendline('genmove B')
+    random_game = random.choice(database)
+    book_move = random_game.split(';')[1]
+    position += ';' + book_move
+    col = 'abcdefghjklmnopqrst'['abcdefghijklmnopqrs'.index(book_move[2])].upper()
+    row = str(19 - 'abcdefghijklmnopqrs'.index(book_move[3]))
+    best_move = col + row
+    print(' Book move:', best_move)
+    c.sendline('play ' + book_move[0] + ' ' + best_move)
     c.expect('= (.*)', timeout = -1)
-    first_move = c.after.split()[-1]
-    pg.moveTo(set_square[first_move])
+    old_move = best_move
+    print_board(c)
+    pg.moveTo(set_square[best_move])
     pg.click()
-  
+
   # Old move
   old_move = ''
   
@@ -176,11 +225,27 @@ def play_game():
       print_board(c)
 
       # Generate move
-      c.sendline('genmove ' + ('B' if side_to_move == BLACK else 'W'))
-      c.expect('= (.*)', timeout = -1)
-      best_move = c.after.split()[-1]
-      print(' Generated move:', best_move)
-      print_board(c)
+      col = 'abcdefghijklmnopqrs'['abcdefghjklmnopqrst'.index(move[0].lower())]
+      row = ' srqponmlkjihgfedcba'[int(move[1:])]
+      position += ';' + color.capitalize()[0] + '[' + col + row + ']'
+      responses = query_db(position)
+
+      if len(responses):
+        book_move = random.choice(responses)
+        col = 'abcdefghjklmnopqrst'['abcdefghijklmnopqrs'.index(book_move[2])].upper()
+        row = str(19 - 'abcdefghijklmnopqrs'.index(book_move[3]))
+        best_move = col + row
+        position += ';' + book_move
+        print(' Book move:', best_move)
+        c.sendline('play ' + book_move[0] + ' ' + best_move)
+        c.expect('= (.*)', timeout = -1)
+        print_board(c)
+      else:
+        c.sendline('genmove ' + ('B' if side_to_move == BLACK else 'W'))
+        c.expect('\n= (.*)', timeout = -1)
+        best_move = c.after.split("=")[-1].strip()
+        print(' Generated move:', best_move)
+        print_board(c)
 
       # Make engine move
       pg.moveTo(set_square[best_move])
@@ -188,7 +253,6 @@ def play_game():
     
     # Error updating board
     except Exception as e:
-      if best_move == 'PASS': print('Click PASS move')
       print('Game finished!')
       sys.exit(0)
 
@@ -200,6 +264,9 @@ def calibrate():
   # Init engine
   c = init_engine(ENGINE)
 
+  # Init opening database
+  init_db()
+
   while True:
     # Parse move
     color = 'black' if side_to_move else 'white'
@@ -209,7 +276,7 @@ def calibrate():
     if move != '' and move != old_move:
       old_move = move
       print(color.capitalize() + ' moved to ' + move)
-
+     
       # Sync engine
       c.sendline('play ' + color[0].upper() + ' ' + move)
       c.expect('= (.*)', timeout = -1)
@@ -225,13 +292,14 @@ if __name__ == '__main__':
   init_coords()
   if len(sys.argv) == 2:
     side_to_move = BLACK if sys.argv[1] == 'black' else WHITE
+    COLOR = sys.argv[1].capitalize()
     play_game()
   else:
     print('usage: "playok-go.py white" or "playok-go.py black"\n')
     print(' Now running in calibration mode...\n')
     print('1. Open web browser on half of the screen on the left')
-    print('2. Open online-go.com, choose any game played between players')
-    print('3. Enter "Zen" mode')
+    print('2. Open playok.com, choose any game played between players')
+    print('3. Maximize board size using "+"')
     print('4. Mouse pointer should follow the last move made on board\n')
     print(' If it doesn\'t work:\n')
     print('1. Set BOARD_TOP_COORD = px from top screen edge to board top line')

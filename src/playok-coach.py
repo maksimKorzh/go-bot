@@ -94,7 +94,7 @@ def locate_stone(color):
 
   # Locate stone on a screenshot
   try:
-    stone = pg.locateOnScreen('playok-' + color + '.png', confidence=0.9)
+    stone = pg.locateOnScreen('../img/playok-' + color + '.png', confidence=0.9)
     col = int((stone.left - MATCH_SIZE - BOARD_LEFT_COORD) / CELL_SIZE) - 1
     row = int((stone.top - MATCH_SIZE - BOARD_TOP_COORD) / CELL_SIZE) - 1
     move = get_square[row*19+col]
