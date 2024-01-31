@@ -1,5 +1,5 @@
 # Go Bot
-Play Go at playok.com or online-go.com via GNU Go or Pachi
+Play Go at playok.com or online-go.com via GNU Go, Pachi, Katago
 
 # How it works?
 Python script takes a screenshot, finds the coordinates of
@@ -22,6 +22,7 @@ CALIBRATE:<br>
 
 PLAY:<br>
 <strong>python3 playok-gnugo.py white</strong> or <strong>python3 playok-gnugo.py black</strong><br>
+<strong>python3 playok-katago.py white</strong> or <strong>python3 playok-katago.py black</strong><br><br>
 <strong>python3 ogs-pachi.py white</strong> or <strong>python3 ogs-pachi.py black</strong><br><br>
 
 COACH (suggests moves for both sides using Pachi):<br>
