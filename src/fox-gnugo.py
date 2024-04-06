@@ -129,7 +129,8 @@ def play_move(c, move, color):
 # Generate engine move
 def genmove(c, side_to_move):
   c.sendline('reg_genmove ' + ('B' if side_to_move == BLACK else 'W'))
-  c.expect('= (.*)', timeout=-1)
+  try: c.expect('= (.*)', timeout=-1)
+  except: return genmove(c, side_to_move)
   best_move = c.after.split()[-1]
   if len(best_move) < 2:
     return genmove(c, side_to_move)
