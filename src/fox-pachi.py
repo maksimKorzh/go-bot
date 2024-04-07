@@ -124,7 +124,8 @@ def init_engine():
 # Play move
 def play_move(c, move, color):
   c.sendline('play ' + color[0].upper() + ' ' + move)
-  try: c.expect('\n= (.*)', timeout=-1)
+  try:
+    c.expect('\n= (.*)', timeout=-1)
   except: pass
 
 # Generate engine move
@@ -139,7 +140,6 @@ def genmove(c, side_to_move):
     c.sendline('undo')
     return genmove(c, side_to_move)
   return best_move
-
 
 # Engine plays game
 def play_game():
@@ -178,7 +178,6 @@ def play_game():
 
       # Generate move
       best_move = genmove(c, side_to_move)
-      play_move(c, best_move, engine_color)
       print(' Generated move:', best_move)
 
       # Make engine move
