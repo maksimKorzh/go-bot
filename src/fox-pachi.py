@@ -25,7 +25,7 @@ BOARD_LEFT_COORD = 180 - CELL_SIZE * 2
 
 # Go playing program
 BOARD_SIZE = 19
-KOMI = 7.5
+KOMI = 8.5
 
 # Players
 WHITE = 0
@@ -100,7 +100,7 @@ def locate_stone(color):
 # Init engine
 def init_engine():
   # Start engine subprocess
-  c = wexpect.spawn(r'C:\\Pachi-12.84\\pachi.bat')
+  c = wexpect.spawn(r'C:\Pachi-12.84\pachi.bat')
 
   # Init commands
   init_commands = [
@@ -121,12 +121,25 @@ def init_engine():
   # Engine subprocess
   return c
 
-# Print board
-def print_score(c):
-  # Estimate score
-  c.sendline('score_est')
-  c.expect('= (.*)', timeout = -1)
-  print(c.after.split('=')[-1])
+# Play move
+def play_move(c, move, color):
+  c.sendline('play ' + color[0].upper() + ' ' + move)
+  try: c.expect('\n= (.*)', timeout=-1)
+  except: pass
+
+# Generate engine move
+def genmove(c, side_to_move):
+  c.sendline('genmove ' + ('B' if side_to_move == BLACK else 'W'))
+  try: c.expect('\n= (.*)', timeout=-1)
+  except:
+    c.sendline('undo')
+    return genmove(c, side_to_move)
+  best_move = c.after.split()[-1]
+  if len(best_move) < 2:
+    c.sendline('undo')
+    return genmove(c, side_to_move)
+  return best_move
+
 
 # Engine plays game
 def play_game():
@@ -149,6 +162,7 @@ def play_game():
   while True:
     # Pick up opponent's color
     color = 'white' if side_to_move == BLACK else 'black'
+    engine_color = 'black' if side_to_move == BLACK else 'white'
 
     # Wait for opponent's move
     move = ''
@@ -158,19 +172,14 @@ def play_game():
     # Update board with user move and make engine move
     try:
       # Sync engine
-      c.sendline('play ' + color[0].upper() + ' ' + move)
-      c.expect('= (.*)', timeout = -1)
+      play_move(c, move, color)
       old_move = move
-      pg.moveTo(set_square[move])
       print(' Parsed move:', move)
-      print_score(c)
 
       # Generate move
-      c.sendline('genmove ' + ('B' if side_to_move == BLACK else 'W'))
-      c.expect('\n= (.*)', timeout = -1)
-      best_move = c.after.split("=")[-1].strip()
-      print(' Generated move:', c.after)
-      print_score(c)
+      best_move = genmove(c, side_to_move)
+      play_move(c, best_move, engine_color)
+      print(' Generated move:', best_move)
 
       # Make engine move
       pg.moveTo(set_square[best_move])
@@ -179,10 +188,9 @@ def play_game():
     # Error updating board
     except Exception as e:
       if best_move == 'PASS': print('Click PASS move')
-      print('Game finished!', repr(e))
+      else: print('ERROR:', repr(e))
+      print('Game finished!')
       sys.exit(0)
-      # TODO: sometimes pachi fails to generate move
-      #       and simply returns empty string
 
 # Calibrate screen coordinates (debug)
 def calibrate():
