@@ -99,7 +99,7 @@ def locate_stone(color):
 # Init engine
 def init_engine():
   # Start engine subprocess
-  c = wexpect.spawn(r'C:\\gnugo-3.8\\gnugo-3.8\\gnugo.bat')
+  c = wexpect.spawn(r'C:\gnugo-3.8\gnugo-3.8\gnugo.bat')
   
   # Init commands
   init_commands = [
