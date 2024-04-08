@@ -134,11 +134,14 @@ def genmove(c, side_to_move):
   try: c.expect('\n= (.*)', timeout=-1)
   except:
     c.sendline('undo')
+    c.expect('\n= (.*)', timeout=-1)
     return genmove(c, side_to_move)
   best_move = c.after.split()[-1]
   if len(best_move) < 2:
-    c.sendline('undo')
-    return genmove(c, side_to_move)
+    if '=' in c.after:
+      c.sendline('undo')
+      c.expect('\n= (.*)', timeout=-1)
+      return genmove(c, side_to_move)
   return best_move
 
 # Engine plays game
@@ -147,17 +150,15 @@ def play_game():
   # Start engine subprocess
   c = init_engine()
 
-  # Make first move is side is BLACK
-  if side_to_move == BLACK:
-    c.sendline('genmove B')
-    c.expect('\n= (.*)', timeout = -1)
-    first_move = c.after.split()[-1]
-    pg.moveTo(set_square[first_move])
-    pg.click()
+  # Start autoplay from a given move number
+  move_count = 0
+  move_gen = 6
+  move_start = move_gen if side_to_move == BLACK else move_gen+1
+  side_to_move = WHITE
   
   # Old move
   old_move = ''
-  
+
   # Play game
   while True:
     # Pick up opponent's color
@@ -175,14 +176,20 @@ def play_game():
       play_move(c, move, color)
       old_move = move
       print(' Parsed move:', move)
+      pg.moveTo(set_square[move])
+      move_count = move_count + 1
 
-      # Generate move
-      best_move = genmove(c, side_to_move)
-      print(' Generated move:', best_move)
+      if move_count >= move_start:
+        # Generate move
+        best_move = genmove(c, side_to_move)
+        print(' Generated move:', best_move)
 
-      # Make engine move
-      pg.moveTo(set_square[best_move])
-      pg.click()
+        # Make engine move
+        pg.moveTo(set_square[best_move])
+        pg.click()
+      else:
+        # Change side
+        side_to_move ^= 1
     
     # Error updating board
     except Exception as e:
