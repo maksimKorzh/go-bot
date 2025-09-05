@@ -120,7 +120,6 @@ def locate_stone(color):
     top_left = max_loc
     col = max(int((top_left[0] - BOARD_LEFT_COORD) / CELL_SIZE) - 1, 0)
     row = max(int((top_left[1] - BOARD_TOP_COORD) / CELL_SIZE) - 1, 0)
-    print(col, row)
     move = get_square[row * 19 + col]
     return move
   return ''
